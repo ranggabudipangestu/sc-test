@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards, UsePipes, ValidationPipe  } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards, UsePipes, ValidationPipe  } from '@nestjs/common';
 import { AdminGuard} from 'src/auth/role.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { GetUserData } from './get-user.decorator';
-import { UserDto } from './user.dto';
+import { ChangePasswordDto, UpdateUserDto, UserDto } from './user.dto';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 
@@ -33,13 +33,21 @@ export class UserController {
     @Put("/user/:id")
     @UsePipes(ValidationPipe)
     @UseGuards(JwtAuthGuard, AdminGuard)
-    updateUser(@Body() updateUserDto:UserDto, @Param() id:any):Promise<User>{
+    updateUser(@Body() updateUserDto:UpdateUserDto, @Param('id') id:any):Promise<User>{
         return this.userService.updateUser(updateUserDto, id)
     }
 
+    @Patch("/user/:id/change-password")
+    @UsePipes(ValidationPipe)
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    changePassword(@Body() changePassword:ChangePasswordDto, @Param('id') id:any):Promise<User>{
+        return this.userService.changePassword(changePassword, id)
+    }
+
+
     @Delete("/user/:id")
     @UseGuards(JwtAuthGuard, AdminGuard)
-    deleteUser(@Param() id:any):Promise<any>{
+    deleteUser(@Param('id') id:any):Promise<any>{
         return this.userService.deleteUser(id)
     }
 }

@@ -1,7 +1,7 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { UserDto } from './user.dto';
+import { ChangePasswordDto, UpdateUserDto, UserDto } from './user.dto';
 import { User } from './user.entity';
 import * as bcrypt from "bcryptjs";
 import { LoginDto } from '../auth/login.dto';
@@ -51,13 +51,12 @@ export class UserService {
         return data
     }
 
-    async updateUser(updateUserDto:UserDto, id:number):Promise<User>{
+    async updateUser(updateUserDto:UpdateUserDto, id:number):Promise<User>{
 
         const user = await this.getUserById(id)
 
         const salt = user.salt
         user.username = updateUserDto.username;
-        user.password = await this.hashPassword(updateUserDto.password, salt)
         user.email = updateUserDto.email
         user.role = updateUserDto.role
 
@@ -71,10 +70,30 @@ export class UserService {
             }
         }
     }
-
+    async changePassword(changeUserDto:ChangePasswordDto, id:number):Promise<any>{
+        const user = await this.getUserById(id)
+        const {oldPassword, newPassword, confirmNewPassword} = changeUserDto
+        const salt = user.salt
+        if(user.password !== await this.hashPassword(oldPassword, salt)){
+            throw new BadRequestException("Old password is not valid")
+        }
+        if(newPassword !== confirmNewPassword){
+            throw new BadRequestException("new password doesn't match")
+        }
+        user.password = await this.hashPassword(newPassword, salt)
+        return await user.save()
+    }
     async deleteUser(id:any):Promise<any>{
         const user = await this.getUserById(id)
-        return this.userRepository.remove(id)
+        if(user){
+            return await this.userRepository
+            .createQueryBuilder()
+            .delete()
+            .from(User)
+            .where("id = :id", { id })
+            .execute();
+        }
+        
     }
 
     private async hashPassword(password:string, salt:string):Promise<string>{
