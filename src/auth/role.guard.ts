@@ -10,6 +10,7 @@ export class AdminGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest()
     const user:User = req.user
+    //if the user is not admin
     if(user.role.toLocaleLowerCase() !== UserRole.ADMIN.toLocaleLowerCase()){
         throw new UnauthorizedException(`role '${user.role}' doesn't have access to this operation`)
     }
