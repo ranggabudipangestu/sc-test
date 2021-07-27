@@ -14,3 +14,6 @@
 
 * FILE YAML KUBERNETES
   * sc-deploy.yaml
+
+* DIAGRAM :
+  * folder DIAGRAM
